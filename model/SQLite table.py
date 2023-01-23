@@ -15,42 +15,42 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class Post(db.Model):
     __tablename__ = 'posts'
 
-    # Define the classofs schema
+    # Define the Notes schema
     id = db.Column(db.Integer, primary_key=True)
-    classof = db.Column(db.Text, unique=False, nullable=False)
-    dob = db.Column(db.String, unique=False)
-    # Define a relationship in classofs Schema to userID who originates the classof, many-to-one (many classofs to one user)
+    note = db.Column(db.Text, unique=False, nullable=False)
+    image = db.Column(db.String, unique=False)
+    # Define a relationship in Notes Schema to userID who originates the note, many-to-one (many notes to one user)
     userID = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    # Constructor of a classofs object, initializes of instance variables within object
-    def __init__(self, id, classof, dob):
+    # Constructor of a Notes object, initializes of instance variables within object
+    def __init__(self, id, note, image,):
         self.userID = id
-        self.classof = classof
-        self.dob = dob
+        self.note = note
+        self.image = image
 
-    # Returns a string representation of the classofs object, similar to java toString()
+    # Returns a string representation of the Notes object, similar to java toString()
     # returns string
     def __repr__(self):
-        return "classofs(" + str(self.id) + "," + self.classof + "," + str(self.userID) + ")"
+        return "Notes(" + str(self.id) + "," + self.note + "," + str(self.userID) + ")"
 
-    # CRUD create, adds a new record to the classofs table
+    # CRUD create, adds a new record to the Notes table
     # returns the object added or None in case of an error
     def create(self):
         try:
-            # creates a classofs object from classofs(db.Model) class, passes initializers
-            db.session.add(self)  # add prepares to persist person object to classofs table
+            # creates a Notes object from Notes(db.Model) class, passes initializers
+            db.session.add(self)  # add prepares to persist person object to Notes table
             db.session.commit()  # SqlAlchemy "unit of work pattern" requires a manual commit
             return self
         except IntegrityError:
             db.session.remove()
             return None
 
-    # CRUD read, returns dictionary representation of classofs object
+    # CRUD read, returns dictionary representation of Notes object
     # returns dictionary
     def read(self):
-        # encode dob
+        # encode image
         path = app.config['UPLOAD_FOLDER']
-        file = os.path.join(path, self.dob)
+        file = os.path.join(path, self.image)
         file_text = open(file, 'rb')
         file_read = file_text.read()
         file_encode = base64.encodebytes(file_read)
@@ -58,9 +58,9 @@ class Post(db.Model):
         return {
             "id": self.id,
             "userID": self.userID,
-            "classof": self.classof,
-            "dob": self.dob,
-            "age": self.age
+            "note": self.note,
+            "image": self.image,
+            "base64": str(file_encode)
         }
 
 
@@ -79,18 +79,17 @@ class User(db.Model):
     _password = db.Column(db.String(255), unique=False, nullable=False)
     _dob = db.Column(db.Date)
 
-    # Defines a relationship between User record and classofs table, one-to-many (one user to many classofs)
+    # Defines a relationship between User record and Notes table, one-to-many (one user to many notes)
     posts = db.relationship("Post", cascade='all, delete', backref='users', lazy=True)
 
-class User:    
-
-    def __init__(self, name, uid, classof, password, dob):
+    # constructor of a User object, initializes the instance variables within object (self)
+    def __init__(self, name, uid, password="123qwerty", dob=date.today()):
         self._name = name    # variables with self prefix become part of the object, 
         self._uid = uid
-        self._classof = classof
         self.set_password(password)
         self._dob = dob
-    
+
+    # a name getter method, extracts name from object
     @property
     def name(self):
         return self._name
@@ -115,12 +114,19 @@ class User:
         return self._uid == uid
     
     @property
-    def classof(self):
-        return self._classof
-    
-    @classof.setter
-    def classof(self, classof):
-        self.classof = classof
+    def password(self):
+        return self._password[0:10] + "..." # because of security only show 1st characters
+
+    # update password, this is conventional setter
+    def set_password(self, password):
+        """Create a hashed password."""
+        self._password = generate_password_hash(password, method='sha256')
+
+    # check password parameter versus stored/encrypted password
+    def is_password(self, password):
+        """Check against hashed password."""
+        result = check_password_hash(self._password, password)
+        return result
     
     # dob property is returned as string, to avoid unfriendly outcomes
     @property
@@ -132,24 +138,42 @@ class User:
     @dob.setter
     def dob(self, dob):
         self._dob = dob
-        
-    # age is calculated and returned each time it is accessed
+    
     @property
     def age(self):
         today = date.today()
         return today.year - self._dob.year - ((today.month, today.day) < (self._dob.month, self._dob.day))
     
-    # dictionary is customized, removing password for security purposes
-    @property
-    def dictionary(self):
-        dict = {
-            "name" : self.name,
-            "uid" : self.uid,
-            "classof" : self.classof,
-            "dob" : self.dob,
-            "age" : self.age
+    # output content using str(object) in human readable form, uses getter
+    # output content using json dumps, this is ready for API response
+    def __str__(self):
+        return json.dumps(self.read())
+
+    # CRUD create/add a new record to the table
+    # returns self or None on error
+    def create(self):
+        try:
+            # creates a person object from User(db.Model) class, passes initializers
+            db.session.add(self)  # add prepares to persist person object to Users table
+            db.session.commit()  # SqlAlchemy "unit of work pattern" requires a manual commit
+            return self
+        except IntegrityError:
+            db.session.remove()
+            return None
+
+    # CRUD read converts self to dictionary
+    # returns dictionary
+    def read(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "uid": self.uid,
+            "dob": self.dob,
+            "age": self.age,
+            "posts": [post.read() for post in self.posts]
         }
-# CRUD update: updates user name, password, phone
+
+    # CRUD update: updates user name, password, phone
     # returns self
     def update(self, name="", uid="", password=""):
         """only updates values with length"""
@@ -169,6 +193,7 @@ class User:
         db.session.commit()
         return None
 
+
 """Database Creation and Testing """
 
 
@@ -185,13 +210,13 @@ def initUsers():
 
     users = [u1, u2, u3, u4, u5]
 
-    """Builds sample user/classof(s) data"""
+    """Builds sample user/note(s) data"""
     for user in users:
         try:
-            '''add a few 1 to 4 classofs per user'''
+            '''add a few 1 to 4 notes per user'''
             for num in range(randrange(1, 4)):
-                classof = "#### " + user.name + " classof " + str(num) + ". \n Generated by test data."
-                user.posts.append(Post(id=user.id, classof=classof, dob='ncs_logo.png'))
+                note = "#### " + user.name + " note " + str(num) + ". \n Generated by test data."
+                user.posts.append(Post(id=user.id, note=note, image='ncs_logo.png'))
             '''add user/post data to table'''
             user.create()
         except IntegrityError:
