@@ -4,13 +4,13 @@ from datetime import datetime
 
 from model.users import User
 
-user_api = Blueprint('user_api', __name__,
+activity_api = Blueprint('activity_api', __name__,
                    url_prefix='/api/users')
 
 # API docs https://flask-restful.readthedocs.io/en/latest/api.html
-api = Api(user_api)
+api = Api(activity_api)
 
-class UserAPI:        
+class ActivityAPI:        
     class _Create(Resource):
         def post(self):
             ''' Read data for json body '''
@@ -26,23 +26,19 @@ class UserAPI:
             if uid is None or len(uid) < 2:
                 return {'message': f'User ID is missing, or is less than 2 characters'}, 210
             # look for password and dob
-            password = body.get('password')
-            dob = body.get('dob')
-
+            address = body.get('address')
+            if name is None or len(address) < 2:
+                return {'message': f'Address is missing, or is less than 2 characters'}, 210
+            coordinates = body.get('coordinates')
+            if name is None or len(coordinates) < 2:
+                return {'message': f'Coordinates is missing, or is less than 2 characters'}, 210
+            fun = body.get('fun')
+            if name is None or len(fun) < 2:
+                return {'message': f'Fun is missing, or is less than 2 characters'}, 210
+            
             ''' #1: Key code block, setup USER OBJECT '''
             uo = User(name=name, 
                       uid=uid)
-            
-            ''' Additional garbage error checking '''
-            # set password if provided
-            if password is not None:
-                uo.set_password(password)
-            # convert to date type
-            if dob is not None:
-                try:
-                    uo.dob = datetime.strptime(dob, '%m-%d-%Y').date()
-                except:
-                    return {'message': f'Date of birth format error {dob}, must be mm-dd-yyyy'}, 210
             
             ''' #2: Key Code block to add user to database '''
             # create user in database
