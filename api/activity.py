@@ -5,7 +5,7 @@ from datetime import datetime
 from model.activity import Activities
 
 activity_api = Blueprint('activity_api', __name__,
-                   url_prefix='/api/activities')
+                   url_prefix='/api/Activities')
 
 # API docs https://flask-restful.readthedocs.io/en/latest/api.html
 api = Api(activity_api)
@@ -27,22 +27,26 @@ class ActivityAPI:
                 return {'message': f'User ID is missing, or is less than 2 characters'}, 210
             # look for password and dob
             address = body.get('address')
-            if name is None or len(address) < 2:
-                return {'message': f'Address is missing, or is less than 2 characters'}, 210
+            if address is None or len(address) < 0:
+                return {'message': f'address is missing, or is less than 2 characters'}, 210
             coordinates = body.get('coordinates')
-            if name is None or len(coordinates) < 2:
-                return {'message': f'Coordinates is missing, or is less than 2 characters'}, 210
+            if coordinates is None or len(coordinates) < 1:
+                return {'message': f'coordinates is missing, or is less than 2 characters'}, 210
             fun = body.get('fun')
-            if name is None or len(fun) < 2:
-                return {'message': f'Fun is missing, or is less than 2 characters'}, 210
+            if fun is None or len(fun) < 1:
+                return {'message': f'fun is missing, or is less than 2 characters'}, 210
             
+    
             ''' #1: Key code block, setup USER OBJECT '''
             uo = Activities(name=name, 
                       uid=uid)
             
+            ''' Additional garbage error checking '''
+            # set password if provided
+            
             ''' #2: Key Code block to add user to database '''
             # create user in database
-            Activity = uo.create()
+            activity = uo.create()
             # success returns json of user
             if activity:
                 return jsonify(activity.read())
@@ -51,8 +55,8 @@ class ActivityAPI:
 
     class _Read(Resource):
         def get(self):
-            Activities = Activities.query.all()    # read/extract all users from database
-            json_ready = [Activity.read() for user in Activites]  # prepare output in json
+            Activities = Activities.query.all()    # read/extract all activities from database
+            json_ready = [Activities.read() for activities in Activities]  # prepare output in json
             return jsonify(json_ready)  # jsonify creates Flask response object, more specific to APIs than json.dumps
 
     # building RESTapi endpoint
