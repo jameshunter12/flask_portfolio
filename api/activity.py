@@ -38,7 +38,7 @@ class ActivityAPI:
             
     
             ''' #1: Key code block, setup USER OBJECT '''
-            uo = Activities(name=name, 
+            uo = activity(name=name, 
                       uid=uid)
             
             ''' Additional garbage error checking '''

@@ -13,6 +13,7 @@ from model.activity import initActivity
 from api.covid import covid_api # Blueprint import api definition
 from api.joke import joke_api # Blueprint import api definition
 from api.user import user_api # Blueprint import api definition
+from api.activity import activity_api # Blueprint import api definition
 
 # setup App pages
 from projects.projects import app_projects # Blueprint directory import projects definition
@@ -21,6 +22,7 @@ from projects.projects import app_projects # Blueprint directory import projects
 app.register_blueprint(joke_api) # register api routes
 app.register_blueprint(covid_api) # register api routes
 app.register_blueprint(user_api) # register api routes
+app.register_blueprint(activity_api)
 app.register_blueprint(app_projects) # register app pages
 
 @app.errorhandler(404)  # catch for URL not found

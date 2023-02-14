@@ -11,9 +11,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 ''' Tutorial: https://www.sqlalchemy.org/library.html#tutorials, try to get into Python shell and follow along '''
 
 
-# Define the Post class to manage actions in 'posts' table,  with a relationship to 'users' table
+# Define the Post class to manage actions in 'Posts' table,  with a relationship to 'users' table
 class Post(db.Model):
-  __tablename__ = 'posts'
+  __tablename__ = 'Posts'
 
   # Define the Notes schema
   id = db.Column(db.Integer, primary_key=True)
@@ -69,7 +69,7 @@ class Post(db.Model):
       }
 
 # Define the User class to manage actions in the 'users' table
-# -- Object Relational Mapping (ORM) is the key concept of SQLAlchemy
+# -- Object Relational Postping (ORM) is the key concept of SQLAlchemy
 # -- a.) db.Model is like an inner layer of the onion in ORM
 # -- b.) User represents data we want to store, something that is built on db.Model
 # -- c.) SQLAlchemy ORM is layer on top of SQLAlchemy Core, then SQLAlchemy engine, SQL
@@ -85,7 +85,7 @@ class User(db.Model):
   _coordinates = db.Column(db.String(255), unique=False, nullable=False)
 
   # Defines a relationship between User record and Notes table, one-to-many (one user to many notes)
-  posts = db.relationship("Post", cascade='all, delete', backref='users', lazy=True)
+  Posts = db.relationship("Post", cascade='all, delete', backref='users', lazy=True)
 
   # constructor of a User object, initializes the instance variables within object (self)
   def __init__(self, name, uid, address, coordinates ,fun):
@@ -172,7 +172,7 @@ class User(db.Model):
           "address": self.address,
           "coordinates": self.coordinates,
           "fun": self.fun,
-          "posts": [post.read() for post in self.posts]
+          "Posts": [Post.read() for Post in self.Posts]
       }
 
   # CRUD update: updates user name, password, phone
@@ -218,8 +218,8 @@ def initActivity():
       try:
           '''add a few 1 to 4 notes per user'''
           for num in range(randrange(1, 4)):
-              user.posts.append(Post(id=user.id, address=user._address, coordinates=user._coordinates ,fun = user._fun))
-          '''add user/post data to table'''
+              user.Posts.append(Post(id=user.id, address=user._address, coordinates=user._coordinates ,fun = user._fun))
+          '''add user/Post data to table'''
           user.create()
       except IntegrityError:
           '''fails with bad or duplicate data'''
