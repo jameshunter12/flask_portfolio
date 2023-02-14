@@ -2,10 +2,10 @@ from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource # used for REST API building
 from datetime import datetime
 
-from model.users import User
+from model.activity import Activities
 
 activity_api = Blueprint('activity_api', __name__,
-                   url_prefix='/api/users')
+                   url_prefix='/api/activities')
 
 # API docs https://flask-restful.readthedocs.io/en/latest/api.html
 api = Api(activity_api)
@@ -37,22 +37,22 @@ class ActivityAPI:
                 return {'message': f'Fun is missing, or is less than 2 characters'}, 210
             
             ''' #1: Key code block, setup USER OBJECT '''
-            uo = User(name=name, 
+            uo = Activities(name=name, 
                       uid=uid)
             
             ''' #2: Key Code block to add user to database '''
             # create user in database
-            user = uo.create()
+            Activity = uo.create()
             # success returns json of user
-            if user:
-                return jsonify(user.read())
+            if activity:
+                return jsonify(activity.read())
             # failure returns error
             return {'message': f'Processed {name}, either a format error or User ID {uid} is duplicate'}, 210
 
     class _Read(Resource):
         def get(self):
-            users = User.query.all()    # read/extract all users from database
-            json_ready = [user.read() for user in users]  # prepare output in json
+            Activities = Activities.query.all()    # read/extract all users from database
+            json_ready = [Activity.read() for user in Activites]  # prepare output in json
             return jsonify(json_ready)  # jsonify creates Flask response object, more specific to APIs than json.dumps
 
     # building RESTapi endpoint
