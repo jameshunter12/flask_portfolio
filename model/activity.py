@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 ''' Tutorial: https://www.sqlalchemy.org/library.html#tutorials, try to get into Python shell and follow along '''
 
 
-# Define the Post class to manage actions in 'Posts' table,  with a relationship to 'users' table
+# Define the Post class to manage actions in 'Posts' table,  with a relationship to 'activitys' table
 class Post(db.Model):
   __tablename__ = 'Posts'
 
@@ -22,12 +22,12 @@ class Post(db.Model):
   address = db.Column(db.String, unique=False)
   coordinates = db.Column(db.String, unique=False)
   fun = db.Column(db.String, unique=False)
-  # Define a relationship in Notes Schema to userID who originates the note, many-to-one (many notes to one user)
-  userID = db.Column(db.Integer, db.ForeignKey('users.id'))
+  # Define a relationship in Notes Schema to activityID who originates the note, many-to-one (many notes to one activity)
+  activityID = db.Column(db.Integer, db.ForeignKey('activitys.id'))
 
   # Constructor of a Notes object, initializes of instance variables within object
   def __init__(self, id, address, coordinates, fun):
-      self.userID = id
+      self.activityID = id
       self.address = address
       self.coordinates = coordinates
       self.fun = fun
@@ -35,7 +35,7 @@ class Post(db.Model):
   # Returns a string representation of the Notes object, similar to java toString()
   # returns string
   def __repr__(self):
-      return "Notes(" + str(self.id) + "," + self.note + "," + str(self.userID) + ")"
+      return "Notes(" + str(self.id) + "," + self.note + "," + str(self.activityID) + ")"
 
   # CRUD create, adds a new record to the Notes table
   # returns the object added or None in case of an error
@@ -61,22 +61,22 @@ class Post(db.Model):
     
       return {
           "id": self.id,
-          "userID": self.userID,
+          "activityID": self.activityID,
           "note": self.note,
           "image": self.image,
           "base64": str(file_encode),
           "partysize": self.partysize
       }
 
-# Define the User class to manage actions in the 'users' table
+# Define the activity class to manage actions in the 'activitys' table
 # -- Object Relational Postping (ORM) is the key concept of SQLAlchemy
 # -- a.) db.Model is like an inner layer of the onion in ORM
-# -- b.) User represents data we want to store, something that is built on db.Model
+# -- b.) activity represents data we want to store, something that is built on db.Model
 # -- c.) SQLAlchemy ORM is layer on top of SQLAlchemy Core, then SQLAlchemy engine, SQL
-class User(db.Model):
-  __tablename__ = 'users'  # table name is plural, class name is singular
+class activity(db.Model):
+  __tablename__ = 'activities'  # table name is plural, class name is singular
 
-  # Define the User schema with "vars" from object
+  # Define the activity schema with "vars" from object
   id = db.Column(db.Integer, primary_key=True)
   _name = db.Column(db.String(255), unique=False, nullable=False)
   _uid = db.Column(db.String(255), unique=True, nullable=False)
@@ -84,10 +84,10 @@ class User(db.Model):
   _address = db.Column(db.String(255), unique=False, nullable=False)
   _coordinates = db.Column(db.String(255), unique=False, nullable=False)
 
-  # Defines a relationship between User record and Notes table, one-to-many (one user to many notes)
-  Posts = db.relationship("Post", cascade='all, delete', backref='users', lazy=True)
+  # Defines a relationship between activity record and Notes table, one-to-many (one activity to many notes)
+  Posts = db.relationship("Post", cascade='all, delete', backref='activitys', lazy=True)
 
-  # constructor of a User object, initializes the instance variables within object (self)
+  # constructor of a activity object, initializes the instance variables within object (self)
   def __init__(self, name, uid, address, coordinates ,fun):
       self._name = name    # variables with self prefix become part of the object,
       self._uid = uid
@@ -112,7 +112,7 @@ class User(db.Model):
   def uid(self, uid):
       self._uid = uid
 
-  # check if uid parameter matches user id in object, return boolean
+  # check if uid parameter matches activity id in object, return boolean
   def is_uid(self, uid):
       return self._uid == uid
 
@@ -154,8 +154,8 @@ class User(db.Model):
   # returns self or None on error
   def create(self):
       try:
-          # creates a person object from User(db.Model) class, passes initializers
-          db.session.add(self)  # add prepares to persist person object to Users table
+          # creates a person object from activity(db.Model) class, passes initializers
+          db.session.add(self)  # add prepares to persist person object to activitys table
           db.session.commit()  # SqlAlchemy "unit of work pattern" requires a manual commit
           return self
       except IntegrityError:
@@ -175,7 +175,7 @@ class User(db.Model):
           "Posts": [Post.read() for Post in self.Posts]
       }
 
-  # CRUD update: updates user name, password, phone
+  # CRUD update: updates activity name, password, phone
   # returns self
   def update(self, name="", uid="", address="", coordinates="", fun=""):
       """only updates values with length"""
@@ -206,24 +206,24 @@ def initActivity():
   """Create database and tables"""
   db.create_all()
   """Tester data for table"""
-  u1 = User(name='Daves Hot Chicken', uid='h1', address = '1268 Auto Park Way, Escondido, CA 92029', coordinates = 'lat: 33.158350, lng: -117.032630', fun='8/10')
-  u2 = User(name='Raising Canes', uid='h2', address = '8223 Mira Mesa Blvd, San Diego, CA 92126', coordinates = 'lat: 32.912239, lng: -117.147217', fun='10/10')
-  u3 = User(name='Belmont Park', uid='h3', address = '3146 Mission Blvd, San Diego, CA 92109', coordinates = 'lat: 32.769939, lng: -117.251091', fun='7/10')
-  u4 = User(name='Potato Chip Rock', uid='h4', address = 'Ramona, CA 92065', coordinates = 'lat: 33.010290, lng: -116.947480', fun='6/10')
+  a1 = activity(name='Daves Hot Chicken', uid='h1', address = '1268 Auto Park Way, Escondido, CA 92029', coordinates = 'lat: 33.158350, lng: -117.032630', fun='8/10')
+  a2 = activity(name='Raising Canes', uid='h2', address = '8223 Mira Mesa Blvd, San Diego, CA 92126', coordinates = 'lat: 32.912239, lng: -117.147217', fun='10/10')
+  a3 = activity(name='Belmont Park', uid='h3', address = '3146 Mission Blvd, San Diego, CA 92109', coordinates = 'lat: 32.769939, lng: -117.251091', fun='7/10')
+  a4 = activity(name='Potato Chip Rock', uid='h4', address = 'Ramona, CA 92065', coordinates = 'lat: 33.010290, lng: -116.947480', fun='6/10')
 
-  users = [u1, u2, u3, u4]
+  activities = [a1, a2, a3, a4]
 
-  """Builds sample user/note(s) data"""
-  for user in users:
+  """Builds sample activity/note(s) data"""
+  for activity in activities:
       try:
-          '''add a few 1 to 4 notes per user'''
+          '''add a few 1 to 4 notes per activity'''
           for num in range(randrange(1, 4)):
-              user.Posts.append(Post(id=user.id, address=user._address, coordinates=user._coordinates ,fun = user._fun))
-          '''add user/Post data to table'''
-          user.create()
+              activity.Posts.append(Post(id=activity.id, address=activity._address, coordinates=activity._coordinates ,fun = activity._fun))
+          '''add activity/Post data to table'''
+          activity.create()
       except IntegrityError:
           '''fails with bad or duplicate data'''
           db.session.remove()
-          print(f"Records exist, duplicate email, or error: {user.uid}")
+          print(f"Records exist, duplicate email, or error: {activity.uid}")
 
 
