@@ -6,14 +6,12 @@ from flask import render_template  # import render_template from "public" flask 
 # import "packages" from "this" project
 from __init__ import app  # Definitions initialization
 from model.jokes import initJokes
-from model.users import initUsers
-from model.activity import initActivity
+from model.users import initActivity
 
 # setup APIs
 from api.covid import covid_api # Blueprint import api definition
 from api.joke import joke_api # Blueprint import api definition
 from api.user import user_api # Blueprint import api definition
-from api.activity import activity_api # Blueprint import api definition
 
 # setup App pages
 from projects.projects import app_projects # Blueprint directory import projects definition
@@ -22,7 +20,6 @@ from projects.projects import app_projects # Blueprint directory import projects
 app.register_blueprint(joke_api) # register api routes
 app.register_blueprint(covid_api) # register api routes
 app.register_blueprint(user_api) # register api routes
-app.register_blueprint(activity_api)
 app.register_blueprint(app_projects) # register app pages
 
 @app.errorhandler(404)  # catch for URL not found
@@ -51,3 +48,8 @@ if __name__ == "__main__":
 
 @app.before_first_request
 def activate_job():initJokes(), initActivity()
+
+from flask_cors import CORS
+cors = CORS(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///volumes/sqlite.db'
+app.run(debug=True, host="0.0.0.0", port="8086")
